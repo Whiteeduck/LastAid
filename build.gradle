@@ -24,6 +24,12 @@ repositories {
             includeGroup "curse.maven"
         }
     }
+    maven {
+        url = "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
+        }
+    }
 }
 
 base {
@@ -117,6 +123,8 @@ configurations {
 }
 
 dependencies {
+    // Cold Sweat 2.4.3.1 (NeoForge 1.21.1): optional at runtime, needed to compile the temperature integration
+    compileOnly "maven.modrinth:cold-sweat:r2cD4Llq"
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"
