@@ -1,0 +1,29 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "create"
+    }
+  ],
+  "type": "create:milling",
+  "processing_time": 100,
+  "ingredients": [
+    {
+      "tag": "minecraft:logs_that_burn"
+    }
+  ],
+  "results": [
+    {
+      "id": "lastaid:bark",
+      "count": 2
+    },
+    {
+      "id": "lastaid:bark",
+      "chance": 0.5
+    },
+    {
+      "id": "minecraft:stick",
+      "chance": 0.25
+    }
+  ]
+}

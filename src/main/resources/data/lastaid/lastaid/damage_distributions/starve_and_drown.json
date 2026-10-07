@@ -1,0 +1,9 @@
+{
+  "type": "lastaid:static",
+  "damageTypes": ["drown", "starve"],
+  "algorithm": {
+    "type": "lastaid:random",
+    "nearestFirst": false,
+    "tryNoKill": true
+  }
+}

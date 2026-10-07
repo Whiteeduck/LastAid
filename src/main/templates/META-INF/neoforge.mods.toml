@@ -1,0 +1,65 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="GPL-3.0-only"
+issueTrackerURL="https://github.com/Whiteeduck/LastAid/issues"
+
+[[mods]]
+modId="lastaid"
+version="${mod_version}"
+displayName="Last Aid"
+displayURL="https://github.com/Whiteeduck/LastAid"
+logoFile="lastaid_logo.png"
+authors="DuckerQuacker"
+credits="Based on First Aid by ichttt and First Aid New by maoruiQa (GPLv3). Inspired by Project Zomboid and The Long Dark."
+description='''Survival medicine overhaul built on First Aid.
+Concussions, hypothermia, colds, frostbite and gangrene, amputation, fractures, bleeding, infection, overdoses, carrying wounded players.
+Optional integration with Cold Sweat, Primal Winter and Create.'''
+
+[[accessTransformers]]
+file="META-INF/accesstransformer.cfg"
+
+[[mixins]]
+config="lastaid.mixins.json"
+
+[[dependencies.lastaid]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.219,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.lastaid]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1,1.21.2)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.lastaid]]
+modId="firstaid"
+type="incompatible"
+reason="Last Aid already contains its own copy of First Aid. Remove the original First Aid mod."
+versionRange="[0,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.lastaid]]
+modId="playerrevive"
+type="optional"
+versionRange="[2.0.24,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.lastaid]]
+modId="cold_sweat"
+type="optional"
+versionRange="[2.4,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.lastaid]]
+modId="create"
+type="optional"
+versionRange="[6.0,)"
+ordering="NONE"
+side="BOTH"

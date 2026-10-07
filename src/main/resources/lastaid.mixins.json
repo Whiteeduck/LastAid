@@ -1,0 +1,31 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.duckerquacker.lastaid.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "FoodDataMixin",
+    "RecipeManagerMixin",
+    "LivingEntityHealthMixin",
+    "PoisonMobEffectMixin",
+    "LivingEntityDamageMixin",
+    "PlayerDimensionsMixin",
+    "ProjectileMixin"
+  ],
+  "client": [
+    "client.GameRendererMixin",
+    "client.GameRendererPostAccessor",
+    "client.PostChainAccessor",
+    "client.PostPassAccessor",
+    "client.LivingEntityRendererMixin",
+    "client.PlayerModelMixin",
+    "client.PlayerRendererMixin",
+    "client.PlayerRendererLimbsMixin",
+    "client.HumanoidArmorLayerMixin",
+    "client.ItemInHandLayerMixin",
+    "client.CustomHeadLayerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

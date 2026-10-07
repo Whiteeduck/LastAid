@@ -1,0 +1,55 @@
+package com.duckerquacker.lastaid.common.network;
+
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+
+public final class SimpleFirstAidChannel {
+
+    public void register(RegisterPayloadHandlersEvent event) {
+        var registrar = event.registrar("4");
+        registrar.playToServer(MessageApplyHealingItem.TYPE, MessageApplyHealingItem.STREAM_CODEC, MessageApplyHealingItem.Handler::onMessage);
+        registrar.playToServer(MessageClientRequest.TYPE, MessageClientRequest.STREAM_CODEC, MessageClientRequest.Handler::onMessage);
+        registrar.playToClient(MessageSyncDamageModel.TYPE, MessageSyncDamageModel.STREAM_CODEC, MessageSyncDamageModel::handle);
+        registrar.playToClient(MessageSyncCommandSettings.TYPE, MessageSyncCommandSettings.STREAM_CODEC, MessageSyncCommandSettings::handle);
+        registrar.playToClient(BodyStatusSyncPacket.TYPE, BodyStatusSyncPacket.STREAM_CODEC, BodyStatusSyncPacket::handle);
+        registrar.playToClient(LimbStatePacket.TYPE, LimbStatePacket.STREAM_CODEC, LimbStatePacket::handle);
+        registrar.playToServer(MedicalActionPacket.TYPE, MedicalActionPacket.STREAM_CODEC, MedicalActionPacket::handle);
+        registrar.playToClient(AmputationFeedbackPacket.TYPE, AmputationFeedbackPacket.STREAM_CODEC, AmputationFeedbackPacket::handle);
+    }
+
+    public <T> void registerMessage(int id, Class<T> type, Object encoder, Object decoder, Object handler) {
+    }
+
+    public void send(Object target, Object message) {
+    }
+
+    public void sendToServer(CustomPacketPayload message) {
+        PacketDistributor.sendToServer(message);
+    }
+
+    public void sendDamageModelSync(ServerPlayer player, MessageSyncDamageModel message) {
+        PacketDistributor.sendToPlayersTrackingEntityAndSelf(player, message);
+    }
+
+    public void sendBodyStatus(ServerPlayer player, BodyStatusSyncPacket message) {
+        PacketDistributor.sendToPlayer(player, message);
+    }
+
+    public void sendLimbStateToAll(ServerPlayer player, LimbStatePacket message) {
+        PacketDistributor.sendToPlayersTrackingEntityAndSelf(player, message);
+    }
+
+    public void sendLimbState(ServerPlayer target, LimbStatePacket message) {
+        PacketDistributor.sendToPlayer(target, message);
+    }
+
+    public void sendAmputationFeedback(ServerPlayer target, AmputationFeedbackPacket message) {
+        PacketDistributor.sendToPlayer(target, message);
+    }
+
+    public void sendCommandSettingsSync(ServerPlayer player, MessageSyncCommandSettings message) {
+        PacketDistributor.sendToPlayer(player, message);
+    }
+}

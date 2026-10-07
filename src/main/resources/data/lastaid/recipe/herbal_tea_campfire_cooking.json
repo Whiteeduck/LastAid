@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:campfire_cooking",
+  "category": "food",
+  "ingredient": {
+    "item": "lastaid:herbal_tea_blend"
+  },
+  "result": {
+    "id": "lastaid:herbal_tea"
+  },
+  "experience": 0.1,
+  "cookingtime": 600
+}

@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "id": "lastaid:ice_pack"
+    },
+    "title": {
+      "translate": "advancements.lastaid.medical.something_wrong.title"
+    },
+    "description": {
+      "translate": "advancements.lastaid.medical.something_wrong.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "lastaid:medical/root"
+}

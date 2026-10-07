@@ -1,0 +1,14 @@
+{
+  "type": "lastaid:static",
+  "damageTypes": ["fall", "hot_floor"],
+  "algorithm": {
+    "type": "lastaid:standard",
+    "doNeighbours": true,
+    "partMap": {
+      "feet": [
+        "left_foot",
+        "right_foot"
+      ]
+    }
+  }
+}

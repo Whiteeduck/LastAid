@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "id": "lastaid:medical_kit"
+    },
+    "title": {
+      "translate": "advancements.lastaid.medical.root.title"
+    },
+    "description": {
+      "translate": "advancements.lastaid.medical.root.description"
+    },
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false,
+    "background": "minecraft:textures/block/snow.png"
+  },
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}

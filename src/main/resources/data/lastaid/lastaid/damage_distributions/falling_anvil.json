@@ -1,0 +1,12 @@
+{
+  "type": "lastaid:static",
+  "damageTypes": ["falling_anvil"],
+  "algorithm": {
+    "type": "lastaid:standard",
+    "partMap": {
+      "head": [
+        "head"
+      ]
+    }
+  }
+}

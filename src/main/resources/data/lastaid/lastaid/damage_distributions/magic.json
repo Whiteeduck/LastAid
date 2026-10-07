@@ -1,0 +1,9 @@
+{
+  "type": "lastaid:static",
+  "damageTypes": ["magic"],
+  "algorithm": {
+    "type": "lastaid:random",
+    "nearestFirst": false,
+    "tryNoKill": false
+  }
+}

@@ -1,0 +1,751 @@
+/*
+ * LastAid
+ * Copyright (C) 2017-2024
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.duckerquacker.lastaid;
+
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.common.ModConfigSpec;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+public class FirstAidConfig {
+    private static final int LEGACY_BANDAGE_APPLY_TIME = 2500;
+    private static final int BANDAGE_APPLY_TIME = 3000;
+
+    static final ModConfigSpec serverSpec;
+    static final ModConfigSpec generalSpec;
+    static final ModConfigSpec clientSpec;
+    public static final FirstAidConfig.Server SERVER;
+    public static final FirstAidConfig.General GENERAL;
+    public static final FirstAidConfig.Client CLIENT;
+
+    static {
+        final Pair<FirstAidConfig.Server, ModConfigSpec> specPair = new ModConfigSpec.Builder().configure(FirstAidConfig.Server::new);
+        serverSpec = specPair.getRight();
+        SERVER = specPair.getLeft();
+    }
+
+    static {
+        final Pair<FirstAidConfig.General, ModConfigSpec> specPair = new ModConfigSpec.Builder().configure(FirstAidConfig.General::new);
+        generalSpec = specPair.getRight();
+        GENERAL = specPair.getLeft();
+    }
+
+    static {
+        final Pair<FirstAidConfig.Client, ModConfigSpec> specPair = new ModConfigSpec.Builder().configure(FirstAidConfig.Client::new);
+        clientSpec = specPair.getRight();
+        CLIENT = specPair.getLeft();
+    }
+
+    public static void applyCommandSettings() {
+        migrateLegacyBandageApplyTime();
+        LastAid.dynamicPainEnabled = SERVER.dynamicPainEnabled.get();
+        LastAid.mildPainLevel = SERVER.mildPainLevel.get();
+        LastAid.enablePainVignette = SERVER.enablePainVignette.get();
+        LastAid.enablePainBlur = SERVER.enablePainBlur.get();
+        LastAid.enablePainFovCompression = SERVER.enablePainFovCompression.get();
+        LastAid.enablePainAudioEffects = SERVER.enablePainAudioEffects.get();
+        LastAid.lowSuppressionEnabled = SERVER.lowSuppressionEnabled.get();
+        LastAid.projectileSuppressionEnabled = SERVER.projectileSuppressionEnabled.get();
+        LastAid.lowSuppressionMultiplier = SERVER.lowSuppressionMultiplier.get().floatValue();
+        LastAid.suppressionGainMultiplier = SERVER.suppressionGainMultiplier.get().floatValue();
+        LastAid.rescueWakeUpEnabled = SERVER.rescueWakeUpEnabled.get();
+        LastAid.rescueWakeUpDelaySeconds = SERVER.rescueWakeUpDelaySeconds.get();
+        LastAid.naturalRegenMode = SERVER.naturalRegenMode.get();
+        LastAid.naturalRegenStrategy = SERVER.naturalRegenStrategy.get();
+        LastAid.naturalRegenLimitRatio = SERVER.naturalRegenLimitRatio.get().floatValue();
+        LastAid.naturalRegenCriticalPriorityRatio = SERVER.naturalRegenCriticalPriorityRatio.get().floatValue();
+        LastAid.useFriendlyRandomDistribution = SERVER.useFriendlyRandomDistribution.get();
+        LastAid.friendlyRandomDistributionChance = SERVER.friendlyRandomDistributionChance.get().floatValue();
+        LastAid.medicineEffectMode = SERVER.medicineEffectMode.get();
+        LastAid.medicineTimingMultiplier = SERVER.medicineTimingMultiplier.get().floatValue();
+        LastAid.morphineActivationDelaySeconds = SERVER.morphineActivationDelaySeconds.get();
+        LastAid.painkillerActivationDelaySeconds = SERVER.painkillerActivationDelaySeconds.get();
+        LastAid.injuryDebuffMode = SERVER.injuryDebuffMode.get();
+        LastAid.lowInjuryDebuffDamageScale = SERVER.lowInjuryDebuffDamageScale.get().floatValue();
+        LastAid.lowInjuryDebuffAmplifierScale = SERVER.lowInjuryDebuffAmplifierScale.get().floatValue();
+        LastAid.lowInjuryDebuffDurationScale = SERVER.lowInjuryDebuffDurationScale.get().floatValue();
+        LastAid.injuryDebuffOverrides.clear();
+        LastAid.injuryDebuffOverrides.putAll(parseInjuryDebuffOverrides(SERVER.injuryDebuffOverrides.get()));
+        LastAid.setSuppressionEntityBlacklist(parseResourceLocationList(SERVER.suppressionEntityBlacklist.get()));
+    }
+
+    public static void persistCommandSettings() {
+        SERVER.dynamicPainEnabled.set(LastAid.dynamicPainEnabled);
+        SERVER.mildPainLevel.set(LastAid.mildPainLevel);
+        SERVER.enablePainVignette.set(LastAid.enablePainVignette);
+        SERVER.enablePainBlur.set(LastAid.enablePainBlur);
+        SERVER.enablePainFovCompression.set(LastAid.enablePainFovCompression);
+        SERVER.enablePainAudioEffects.set(LastAid.enablePainAudioEffects);
+        SERVER.lowSuppressionEnabled.set(LastAid.lowSuppressionEnabled);
+        SERVER.projectileSuppressionEnabled.set(LastAid.projectileSuppressionEnabled);
+        SERVER.lowSuppressionMultiplier.set((double) LastAid.lowSuppressionMultiplier);
+        SERVER.suppressionGainMultiplier.set((double) LastAid.suppressionGainMultiplier);
+        SERVER.rescueWakeUpEnabled.set(LastAid.rescueWakeUpEnabled);
+        SERVER.rescueWakeUpDelaySeconds.set(LastAid.rescueWakeUpDelaySeconds);
+        SERVER.naturalRegenMode.set(LastAid.naturalRegenMode);
+        SERVER.naturalRegenStrategy.set(LastAid.naturalRegenStrategy);
+        SERVER.naturalRegenLimitRatio.set((double) LastAid.naturalRegenLimitRatio);
+        SERVER.naturalRegenCriticalPriorityRatio.set((double) LastAid.naturalRegenCriticalPriorityRatio);
+        SERVER.allowNaturalRegeneration.set(LastAid.naturalRegenMode != LastAid.NaturalRegenMode.OFF);
+        SERVER.useFriendlyRandomDistribution.set(LastAid.useFriendlyRandomDistribution);
+        SERVER.friendlyRandomDistributionChance.set((double) LastAid.clampFriendlyRandomDistributionChance(LastAid.friendlyRandomDistributionChance));
+        SERVER.medicineEffectMode.set(LastAid.medicineEffectMode);
+        SERVER.medicineTimingMultiplier.set((double) LastAid.medicineTimingMultiplier);
+        SERVER.morphineActivationDelaySeconds.set(LastAid.morphineActivationDelaySeconds);
+        SERVER.painkillerActivationDelaySeconds.set(LastAid.painkillerActivationDelaySeconds);
+        SERVER.injuryDebuffMode.set(LastAid.injuryDebuffMode);
+        SERVER.lowInjuryDebuffDamageScale.set((double) LastAid.lowInjuryDebuffDamageScale);
+        SERVER.lowInjuryDebuffAmplifierScale.set((double) LastAid.lowInjuryDebuffAmplifierScale);
+        SERVER.lowInjuryDebuffDurationScale.set((double) LastAid.lowInjuryDebuffDurationScale);
+        SERVER.injuryDebuffOverrides.set(serializeInjuryDebuffOverrides(LastAid.injuryDebuffOverrides));
+        SERVER.suppressionEntityBlacklist.set(serializeResourceLocationList(LastAid.suppressionEntityBlacklist));
+        serverSpec.save();
+    }
+
+    private static void migrateLegacyBandageApplyTime() {
+        if (SERVER.bandage.applyTime.get() == LEGACY_BANDAGE_APPLY_TIME) {
+            SERVER.bandage.applyTime.set(BANDAGE_APPLY_TIME);
+            serverSpec.save();
+        }
+    }
+
+    private static Map<ResourceLocation, LastAid.InjuryDebuffMode> parseInjuryDebuffOverrides(List<? extends String> entries) {
+        Map<ResourceLocation, LastAid.InjuryDebuffMode> values = new LinkedHashMap<>();
+        if (entries == null) {
+            return values;
+        }
+        for (String entry : entries) {
+            if (entry == null) {
+                continue;
+            }
+            String trimmed = entry.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            String[] parts = trimmed.split("=", 2);
+            ResourceLocation id = ResourceLocation.tryParse(parts[0].trim());
+            if (id == null) {
+                LastAid.LOGGER.warn("Invalid injury debuff override entry {}", trimmed);
+                continue;
+            }
+            LastAid.InjuryDebuffMode mode = parts.length > 1
+                    ? parseInjuryDebuffMode(parts[1].trim())
+                    : LastAid.InjuryDebuffMode.NORMAL;
+            values.put(id, mode);
+        }
+        return values;
+    }
+
+    private static List<String> serializeInjuryDebuffOverrides(Map<ResourceLocation, LastAid.InjuryDebuffMode> overrides) {
+        List<String> values = new ArrayList<>();
+        if (overrides == null || overrides.isEmpty()) {
+            return values;
+        }
+        for (Map.Entry<ResourceLocation, LastAid.InjuryDebuffMode> entry : overrides.entrySet()) {
+            values.add(entry.getKey() + "=" + entry.getValue().name().toLowerCase(Locale.ROOT));
+        }
+        return values;
+    }
+
+    private static List<ResourceLocation> parseResourceLocationList(List<? extends String> entries) {
+        List<ResourceLocation> values = new ArrayList<>();
+        if (entries == null) {
+            return values;
+        }
+        for (String entry : entries) {
+            if (entry == null || entry.trim().isEmpty()) {
+                continue;
+            }
+            ResourceLocation id = ResourceLocation.tryParse(entry.trim());
+            if (id == null) {
+                LastAid.LOGGER.warn("Invalid suppression entity blacklist entry {}", entry);
+                continue;
+            }
+            values.add(id);
+        }
+        return values;
+    }
+
+    private static List<String> serializeResourceLocationList(Iterable<ResourceLocation> entries) {
+        List<String> values = new ArrayList<>();
+        for (ResourceLocation entry : entries) {
+            values.add(entry.toString());
+        }
+        return values;
+    }
+
+    private static LastAid.InjuryDebuffMode parseInjuryDebuffMode(String raw) {
+        if (raw == null) {
+            return LastAid.InjuryDebuffMode.NORMAL;
+        }
+        for (LastAid.InjuryDebuffMode mode : LastAid.InjuryDebuffMode.values()) {
+            if (mode.name().equalsIgnoreCase(raw)) {
+                return mode;
+            }
+        }
+        return LastAid.InjuryDebuffMode.NORMAL;
+    }
+
+    public static class Server {
+
+        public enum VanillaHealthCalculationMode {
+            AVERAGE_ALL, AVERAGE_CRITICAL, MIN_CRITICAL, CRITICAL_50_PERCENT_OTHER_50_PERCENT
+        }
+
+        public enum ArmorEnchantmentMode {
+            GLOBAL_ENCHANTMENTS, LOCAL_ENCHANTMENTS
+        }
+
+        Server(ModConfigSpec.Builder builder) {
+            builder.comment("Server to Client synced configuration settings").push("Damage System");
+
+            maxHealthHead = healthEntry(builder, "Head", 4);
+            maxHealthLeftArm = healthEntry(builder, "Left Arm", 4);
+            maxHealthLeftLeg = healthEntry(builder, "Left Leg", 4);
+            maxHealthLeftFoot = healthEntry(builder, "Left Foot", 4);
+            maxHealthBody = healthEntry(builder, "Body", 6);
+            maxHealthRightArm = healthEntry(builder, "Right Arm", 4);
+            maxHealthRightLeg = healthEntry(builder, "Right Leg", 4);
+            maxHealthRightFoot = healthEntry(builder, "Right Foot", 4);
+            causeDeathHead = builder
+                    .comment("True if the head can cause death if health drops to 0")
+                    .translation("lastaid.config.causedeath.head")
+                    .define("causeDeathHead", true);
+            causeDeathBody = builder
+                    .comment("True if the body can cause death if health drops to 0")
+                    .translation("lastaid.config.causedeath.body")
+                    .define("causeDeathBody", true);
+
+            builder.pop().push("Locational Armor").push("Armor");
+
+            headArmorMultiplier = multiplierEntry(builder, "Head", 6D);
+            chestArmorMultiplier = multiplierEntry(builder, "Chest", 2.5D);
+            legsArmorMultiplier = multiplierEntry(builder, "Legs", 3D);
+            feetArmorMultiplier = multiplierEntry(builder, "Feet", 6D);
+
+            headArmorOffset = offsetEntry(builder, "Head", 1D);
+            chestArmorOffset = offsetEntry(builder, "Chest", 0D);
+            legsArmorOffset = offsetEntry(builder, "Legs", 0D);
+            feetArmorOffset = offsetEntry(builder, "Feet", 0D);
+
+            builder.pop().push("Toughness");
+
+            headThoughnessMultiplier = multiplierEntry(builder, "Head", 4D);
+            chestThoughnessMultiplier = multiplierEntry(builder, "Chest", 3D);
+            legsThoughnessMultiplier = multiplierEntry(builder, "Legs", 3D);
+            feetThoughnessMultiplier = multiplierEntry(builder, "Feet", 3.5D);
+
+            headThoughnessOffset = offsetEntry(builder, "Head", 0D);
+            chestThoughnessOffset = offsetEntry(builder, "Chest", 0D);
+            legsThoughnessOffset = offsetEntry(builder, "Legs", 0D);
+            feetThoughnessOffset = offsetEntry(builder, "Feet", 0D);
+
+            builder.pop(2).push("Internal Healing");
+
+            bandage = new IEEntry(builder, "bandage", 4, 18, 3000);
+            plaster = new IEEntry(builder, "plaster", 2, 22, 3000);
+
+            builder.pop().push("External Healing");
+
+            allowNaturalRegeneration = builder
+                    .comment("Allow vanilla's natural regeneration. Requires \"allowOtherHealingItems\" to be true", "**WARNING** This sets the gamerule \"naturalRegeneration\" for all of your worlds internally, so it persists even if you remove the mod")
+                    .translation("lastaid.config.allownaturalregeneration")
+                    .worldRestart()
+                    .define("allowNaturalRegeneration", false);
+
+            allowOtherHealingItems = builder
+                    .comment("If false, healing potions and other healing items will have no effect")
+                    .translation("lastaid.config.allowotherhealingitems")
+                    .define("allowOtherHealingItems", true);
+
+            sleepHealPercentage = builder
+                    .comment("Specifies how much percent of the max health should be restored when sleeping")
+                    .translation("lastaid.config.sleephealpercentage")
+                    .defineInRange("sleepHealPercentage", 0.07D, 0D, 1D);
+            otherRegenMultiplier = builder
+                    .comment("The value external regen will be multiplied with. Has no effect if \"allowOtherHealingItems\" is disabled")
+                    .translation("lastaid.config.otherregenmultiplier")
+                    .defineInRange("otherRegenMultiplier", 0.75D, 0D, 20D);
+            naturalRegenMultiplier = builder
+                    .comment("The value vanilla's natural regeneration will be multiplied with. Has no effect if \"allowNaturalRegeneration\" is disabled")
+                    .translation("lastaid.config.naturalregenmultiplier")
+                    .defineInRange("naturalRegenMultiplier", 0.5D, 0D, 20D);
+            naturalRegenMode = builder
+                    .comment("Persistent mode for /lastaid naturalregen")
+                    .defineEnum("naturalRegenMode", LastAid.NaturalRegenMode.LIMITED);
+            naturalRegenStrategy = builder
+                    .comment("Persistent strategy for /lastaid naturalregen")
+                    .defineEnum("naturalRegenStrategy", LastAid.NaturalRegenStrategy.CRITICAL);
+            resistanceReductionPercentPerLevel = builder
+                    .comment("Specifies how the vanilla resistance potion effect should reduce damage.", "By default, one level of resistance reduces 20% of damage. Changing this value to e.g. 10 will reduce the reduction to 10% damage reduction per level")
+                    .translation("lastaid.config.resistancereductionpercentperlevel")
+                    .defineInRange("resistanceReductionPercentPerLevel", 20, 1, 40);
+
+            builder.pop();
+            builder.push("misc");
+            scaleMaxHealth = builder
+                    .comment("If true, max health is scaled to your hearts, and the config entries get multiplier to match the max health")
+                    .translation("lastaid.config.scalemaxhealth")
+                    .worldRestart()
+                    .define("scaleMaxHealth", true);
+
+            capMaxHealth = builder
+                    .comment("If true, max health will be capped at 6 hearts and absorption at 2 hearts per limb. If false, the health cap will be much higher (64 hearts normal and 16 absorption)")
+                    .translation("lastaid.config.scalemaxhealth")
+                    .define("capMaxHealth", true);
+
+            vanillaHealthCalculation = builder
+                    .comment("Specifies how the vanilla health is calculated. Affects the vanilla visual health bar, as well as the value other mods get to see when they query the player health.",
+                            "AVERAGE_ALL simply takes all limbs and calculates the average of it.",
+                            "AVERAGE_CRITICAL takes all critical limbs and calculates the average of it.",
+                            "MIN_CRITICAl takes the smallest health value of all critical limb.",
+                            "Does not have any effect if all critical limbs have been disabled.")
+                    .defineEnum("vanillaHealthCalculation", VanillaHealthCalculationMode.AVERAGE_ALL);
+
+            useFriendlyRandomDistribution = builder
+                    .comment("If enabled, random damage distributions can leave critical limbs at 1hp if possible.",
+                            "When there is too much damage, the damage will still kill the player. Non-random distributions are not affected by this.")
+                    .define("useFriendlyRandomDistribution", true);
+            friendlyRandomDistributionChance = builder
+                    .comment("Chance for friendly random damage behavior to trigger. 0 disables the protection roll, 1 always applies it when useFriendlyRandomDistribution is enabled.")
+                    .defineInRange("friendlyRandomDistributionChance", LastAid.DEFAULT_FRIENDLY_RANDOM_DISTRIBUTION_CHANCE, 0D, 1D);
+
+            armorEnchantmentMode = builder
+                    .comment("If set to LOCAL_ENCHANTMENTS, only the enchantments for the armor for the body part that is currently being damaged is taken into account. The strength of the armor is multiplied by 4 (default value, can be changed by enchantmentMultiplier), so it matches the vanilla default",
+                            "If set to GLOBAL_ENCHANTMENTS, the enchantments of all armor pieces are taken into account for all body parts that have any kind of armor.")
+                    .defineEnum("armorEnchantmentMode", ArmorEnchantmentMode.LOCAL_ENCHANTMENTS);
+
+            builder.pop();
+
+            builder.push("Command Settings");
+            dynamicPainEnabled = builder
+                    .comment("Persistent toggle for /lastaid pain (dynamic vs mild)")
+                    .define("dynamicPainEnabled", true);
+            mildPainLevel = builder
+                    .comment("Pain level used when /lastaid pain mild is active")
+                    .defineInRange("mildPainLevel", 1, 1, 5);
+            enablePainVignette = builder
+                    .comment("Enable red screen vignette overlay when in pain")
+                    .define("enablePainVignette", true);
+            enablePainBlur = builder
+                    .comment("Enable radial pain blur / weak adrenaline warp post-processing")
+                    .define("enablePainBlur", true);
+            enablePainFovCompression = builder
+                    .comment("Enable FOV compression (tunnel vision) when in pain")
+                    .define("enablePainFovCompression", true);
+            enablePainAudioEffects = builder
+                    .comment("Enable severe pain audio effects (tinnitus sound)")
+                    .define("enablePainAudioEffects", true);
+            lowSuppressionEnabled = builder
+                    .comment("Persistent toggle for /lastaid adrenaline (dynamic vs mild)")
+                    .define("lowSuppressionEnabled", false);
+            projectileSuppressionEnabled = builder
+                    .comment("Persistent toggle for projectile near-miss adrenaline")
+                    .define("projectileSuppressionEnabled", true);
+            lowSuppressionMultiplier = builder
+                    .comment("Visual adrenaline intensity multiplier used when /lastaid adrenaline mild is active")
+                    .defineInRange("lowSuppressionMultiplier", 0.4D, 0D, 1D);
+
+            suppressionGainMultiplier = builder
+
+                    .comment("Per-hit adrenaline gain multiplier; also set by /lastaid adrenaline gain")
+
+                    .defineInRange("suppressionGainMultiplier", 0.15D, 0.01D, 1D);
+            encounterSightRange = builder.comment("Visible hostile encounter range in blocks").defineInRange("encounterSightRange", 16.0D, 1.0D, 128.0D);
+            encounterThreatRange = builder.comment("Current threat range in blocks").defineInRange("encounterThreatRange", 12.0D, 1.0D, 128.0D);
+            encounterRecentAttackerTicks = builder.comment("Recent player attacker memory in ticks").defineInRange("encounterRecentAttackerTicks", 600, 1, 72000);
+            adrenalineFatigueEnabled = builder.comment("Apply fatigue after prolonged adrenaline when no threats remain").define("adrenalineFatigueEnabled", true);
+            adrenalineFatigueThresholdSeconds = builder.comment("Continuous adrenaline seconds before fatigue can occur").defineInRange("adrenalineFatigueThresholdSeconds", 60, 1, 3600);
+            adrenalineFatigueDurationRatio = builder.comment("Fatigue duration as a fraction of adrenaline duration").defineInRange("adrenalineFatigueDurationRatio", 0.10D, 0.0D, 1.0D);
+            encounterBaseIntensity = builder.comment("Minimum adrenaline intensity on encounter").defineInRange("encounterBaseIntensity", 0.20D, 0.0D, 1.0D);
+            rescueWakeUpEnabled = builder
+                    .comment("Persistent toggle for /lastaid revivewakeup (on vs off)")
+                    .define("rescueWakeUpEnabled", true);
+            rescueWakeUpDelaySeconds = builder
+                    .comment("Persistent delay in seconds for /lastaid revivewakeup on [seconds]")
+                    .defineInRange("rescueWakeUpDelaySeconds", LastAid.DEFAULT_RESCUE_WAKE_UP_DELAY_SECONDS, 0D, 3600D);
+            naturalRegenLimitRatio = builder
+                    .comment("Maximum health fraction natural regeneration can restore in limited modes")
+                    .defineInRange("naturalRegenLimitRatio", 0.85D, 0D, 1D);
+            naturalRegenCriticalPriorityRatio = builder
+                    .comment("Critical limb health fraction at or below which critical natural regeneration is prioritized")
+                    .defineInRange("naturalRegenCriticalPriorityRatio", 0.85D, 0D, 1D);
+            medicineEffectMode = builder
+                    .comment("Persistent toggle for /lastaid medicineeffect (realistic/assisted/casual)")
+                    .defineEnum("medicineEffectMode", LastAid.MedicineEffectMode.REALISTIC);
+            medicineTimingMultiplier = builder
+                    .comment("Multiplier applied to medicine timing; command presets set this to realistic=1.0, assisted=0.5, casual=0.25")
+                    .defineInRange("medicineTimingMultiplier", 1D, 0.01D, 20D);
+            morphineActivationDelaySeconds = builder
+                    .comment("Exact morphine activation delay in seconds")
+                    .defineInRange("morphineActivationDelaySeconds", LastAid.DEFAULT_MORPHINE_ACTIVATION_DELAY_SECONDS, 0D, 3600D);
+            painkillerActivationDelaySeconds = builder
+                    .comment("Exact painkiller activation delay in seconds")
+                    .defineInRange("painkillerActivationDelaySeconds", LastAid.DEFAULT_PAINKILLER_ACTIVATION_DELAY_SECONDS, 0D, 3600D);
+            morphineUseDuration = builder
+                    .comment("Use duration of morphine in ticks (20 ticks = 1 second)")
+                    .defineInRange("morphineUseDuration", 40, 1, 72000);
+            painkillersUseDuration = builder
+                    .comment("Use duration of painkillers in ticks (20 ticks = 1 second)")
+                    .defineInRange("painkillersUseDuration", 32, 1, 72000);
+            adrenalineUseDuration = builder
+                    .comment("Use duration of adrenaline injector in ticks (20 ticks = 1 second)")
+                    .defineInRange("adrenalineUseDuration", 40, 1, 72000);
+            morphineInjectorUseDuration = builder
+                    .comment("Use duration of morphine injector in ticks (20 ticks = 1 second)")
+                    .defineInRange("morphineInjectorUseDuration", 40, 1, 72000);
+            criticalCrawlEnabled = builder
+                    .comment("If true, critically downed players can crawl slowly during the first 60% of the downed timer")
+                    .define("criticalCrawlEnabled", true);
+            addictionEnabled = builder
+                    .comment("If true, opioid medicines build addiction and can trigger episodic withdrawal")
+                    .define("addictionEnabled", true);
+            morphineAddictionGain = builder.defineInRange("morphineAddictionGain", 7.8, 0, 100);
+            morphineInjectorAddictionGain = builder.defineInRange("morphineInjectorAddictionGain", 20.0D, 0.0D, 100.0D);
+            bandageCraftYield = builder.defineInRange("bandageCraftYield", 4, 1, 16);
+            plasterCraftYield = builder.defineInRange("plasterCraftYield", 4, 1, 16);
+            painkillersCraftYield = builder.defineInRange("painkillersCraftYield", 2, 1, 16);
+            morphineCraftYield = builder.defineInRange("morphineCraftYield", 1, 1, 16);
+            morphineInjectorCraftUses = builder.defineInRange("morphineInjectorCraftUses", 2, 1, 1000);
+            adrenalineInjectorCraftUses = builder.defineInRange("adrenalineInjectorCraftUses", 4, 1, 1000);
+            defibrillatorCraftUses = builder.defineInRange("defibrillatorCraftUses", 3, 1, 1000);
+            injuryDebuffMode = builder
+                    .comment("Persistent toggle for /lastaid injurydebuff (normal/low/off)")
+                    .defineEnum("injuryDebuffMode", LastAid.InjuryDebuffMode.NORMAL);
+            lowInjuryDebuffDamageScale = builder
+                    .comment("Damage and healing scale used when /lastaid injurydebuff low is active")
+                    .defineInRange("lowInjuryDebuffDamageScale", 0.4D, 0D, 1D);
+            lowInjuryDebuffAmplifierScale = builder
+                    .comment("Amplifier scale used when /lastaid injurydebuff low is active")
+                    .defineInRange("lowInjuryDebuffAmplifierScale", 0.5D, 0D, 1D);
+            lowInjuryDebuffDurationScale = builder
+                    .comment("Duration scale used when /lastaid injurydebuff low is active")
+                    .defineInRange("lowInjuryDebuffDurationScale", 0.5D, 0D, 1D);
+            injuryDebuffOverrides = builder
+                    .comment("Per-effect overrides for /lastaid injurydebuff. Format: modid:effect=normal|low|off")
+                    .defineList("injuryDebuffOverrides", Collections.emptyList(), o -> o != null && !o.toString().isBlank());
+            suppressionEntityBlacklist = builder
+                    .comment("Entity type ids that cannot trigger adrenaline near-miss effects")
+                    .defineList("suppressionEntityBlacklist", serializeResourceLocationList(LastAid.getDefaultSuppressionEntityBlacklist()), o -> o != null && ResourceLocation.tryParse(o.toString()) != null);
+            commandTipsEnabled = builder
+                    .comment("If true, operators receive the LastAid admin command tip when joining a world")
+                    .define("commandTipsEnabled", true);
+            builder.pop();
+
+            builder.push("Enchantment Handling");
+
+            enchantmentMultiplier = builder
+                    .comment("Specifies the default modifier. This is only used if armorEnchantmentMode is LOCAL_ENCHANTMENTS, as this is used scale up the values to somewhat match what vanilla balances around (as vanilla balances around global enchantments)")
+                    .defineInRange("enchantmentMultiplier", 4, 0, 4);
+
+            enchMulOverrideResourceLocations = builder
+                    .comment("Specifies the overrides for the the modifier. This is only used if armorEnchantmentMode is LOCAL_ENCHANTMENTS. This can be used to set another multiplier for special enchantments",
+                            "This list specifies the resource location of the enchantment. Must be fully specified and cannot use wildcard. Example: minecraft:feather_falling. First entry here will be matched to first multiplier, second entry to second multiplier and so on")
+                    .defineList("resourceLocations", Collections.singletonList("minecraft:feather_falling"), o -> {
+                        if (o == null || o.toString().isEmpty()) {
+                            LastAid.LOGGER.warn("Ignored empty or invalid string for resourceLocations");
+                            return false;
+                        } else {
+                            return true;
+                        }
+                    });
+            enchMulOverrideMultiplier = builder
+                    .comment("Specifies the overrides for the the modifier. This is only used if armorEnchantmentMode is LOCAL_ENCHANTMENTS. This can be used to set another multiplier for special enchantments",
+                            "This list specifies the multiplier of the corresponding resource location. See resourceLocations comment. Must be between 0 and 4")
+                    .defineList("overrideMultiplier", Collections.singletonList(2), o -> {
+                        try {
+                            int val = Integer.parseInt(o.toString());
+                            return val >= 0 && val <= 4;
+                        } catch (NumberFormatException ignored) {}
+                        LastAid.LOGGER.warn("Invalid entry " + o.toString() + " for overrideMultiplier found!");
+                        return false;
+                    });
+
+            builder.pop();
+        }
+
+        public final ModConfigSpec.IntValue maxHealthHead;
+        public final ModConfigSpec.BooleanValue causeDeathHead;
+        public final ModConfigSpec.IntValue maxHealthLeftArm;
+        public final ModConfigSpec.IntValue maxHealthLeftLeg;
+        public final ModConfigSpec.IntValue maxHealthLeftFoot;
+        public final ModConfigSpec.IntValue maxHealthBody;
+        public final ModConfigSpec.BooleanValue causeDeathBody;
+        public final ModConfigSpec.IntValue maxHealthRightArm;
+        public final ModConfigSpec.IntValue maxHealthRightLeg;
+        public final ModConfigSpec.IntValue maxHealthRightFoot;
+
+        public final ModConfigSpec.DoubleValue headArmorMultiplier;
+        public final ModConfigSpec.DoubleValue chestArmorMultiplier;
+        public final ModConfigSpec.DoubleValue legsArmorMultiplier;
+        public final ModConfigSpec.DoubleValue feetArmorMultiplier;
+
+        public final ModConfigSpec.DoubleValue headArmorOffset;
+        public final ModConfigSpec.DoubleValue chestArmorOffset;
+        public final ModConfigSpec.DoubleValue legsArmorOffset;
+        public final ModConfigSpec.DoubleValue feetArmorOffset;
+
+        public final ModConfigSpec.DoubleValue headThoughnessMultiplier;
+        public final ModConfigSpec.DoubleValue chestThoughnessMultiplier;
+        public final ModConfigSpec.DoubleValue legsThoughnessMultiplier;
+        public final ModConfigSpec.DoubleValue feetThoughnessMultiplier;
+
+        public final ModConfigSpec.DoubleValue headThoughnessOffset;
+        public final ModConfigSpec.DoubleValue chestThoughnessOffset;
+        public final ModConfigSpec.DoubleValue legsThoughnessOffset;
+        public final ModConfigSpec.DoubleValue feetThoughnessOffset;
+
+        public final IEEntry bandage;
+        public final IEEntry plaster;
+
+        public final ModConfigSpec.BooleanValue allowNaturalRegeneration;
+        public final ModConfigSpec.BooleanValue allowOtherHealingItems;
+        public final ModConfigSpec.DoubleValue sleepHealPercentage;
+        public final ModConfigSpec.DoubleValue otherRegenMultiplier;
+        public final ModConfigSpec.DoubleValue naturalRegenMultiplier;
+        public final ModConfigSpec.EnumValue<LastAid.NaturalRegenMode> naturalRegenMode;
+        public final ModConfigSpec.EnumValue<LastAid.NaturalRegenStrategy> naturalRegenStrategy;
+        public final ModConfigSpec.IntValue resistanceReductionPercentPerLevel;
+
+        public final ModConfigSpec.BooleanValue scaleMaxHealth;
+        public final ModConfigSpec.BooleanValue capMaxHealth;
+        public final ModConfigSpec.EnumValue<VanillaHealthCalculationMode> vanillaHealthCalculation;
+        public final ModConfigSpec.BooleanValue useFriendlyRandomDistribution;
+        public final ModConfigSpec.DoubleValue friendlyRandomDistributionChance;
+        public final ModConfigSpec.EnumValue<ArmorEnchantmentMode> armorEnchantmentMode;
+
+        public final ModConfigSpec.IntValue enchantmentMultiplier;
+        public final ModConfigSpec.ConfigValue<List<? extends String>> enchMulOverrideResourceLocations;
+        public final ModConfigSpec.ConfigValue<List<? extends Integer>> enchMulOverrideMultiplier;
+        public final ModConfigSpec.BooleanValue dynamicPainEnabled;
+        public final ModConfigSpec.IntValue mildPainLevel;
+        public final ModConfigSpec.BooleanValue enablePainVignette;
+        public final ModConfigSpec.BooleanValue enablePainBlur;
+        public final ModConfigSpec.BooleanValue enablePainFovCompression;
+        public final ModConfigSpec.BooleanValue enablePainAudioEffects;
+        public final ModConfigSpec.BooleanValue lowSuppressionEnabled;
+        public final ModConfigSpec.BooleanValue projectileSuppressionEnabled;
+        public final ModConfigSpec.DoubleValue lowSuppressionMultiplier;
+        public final ModConfigSpec.DoubleValue suppressionGainMultiplier;
+        public final ModConfigSpec.DoubleValue encounterSightRange;
+        public final ModConfigSpec.DoubleValue encounterThreatRange;
+        public final ModConfigSpec.IntValue encounterRecentAttackerTicks;
+        public final ModConfigSpec.BooleanValue adrenalineFatigueEnabled;
+        public final ModConfigSpec.IntValue adrenalineFatigueThresholdSeconds;
+        public final ModConfigSpec.DoubleValue adrenalineFatigueDurationRatio;
+        public final ModConfigSpec.DoubleValue encounterBaseIntensity;
+        public final ModConfigSpec.BooleanValue rescueWakeUpEnabled;
+        public final ModConfigSpec.DoubleValue rescueWakeUpDelaySeconds;
+        public final ModConfigSpec.DoubleValue naturalRegenLimitRatio;
+        public final ModConfigSpec.DoubleValue naturalRegenCriticalPriorityRatio;
+        public final ModConfigSpec.EnumValue<LastAid.MedicineEffectMode> medicineEffectMode;
+        public final ModConfigSpec.DoubleValue medicineTimingMultiplier;
+        public final ModConfigSpec.DoubleValue morphineActivationDelaySeconds;
+        public final ModConfigSpec.DoubleValue painkillerActivationDelaySeconds;
+        public final ModConfigSpec.IntValue morphineUseDuration;
+        public final ModConfigSpec.IntValue painkillersUseDuration;
+        public final ModConfigSpec.IntValue adrenalineUseDuration;
+        public final ModConfigSpec.IntValue morphineInjectorUseDuration;
+        public final ModConfigSpec.BooleanValue criticalCrawlEnabled;
+        public final ModConfigSpec.BooleanValue addictionEnabled;
+        public final ModConfigSpec.DoubleValue morphineAddictionGain;
+        public final ModConfigSpec.DoubleValue morphineInjectorAddictionGain;
+        public final ModConfigSpec.IntValue bandageCraftYield;
+        public final ModConfigSpec.IntValue plasterCraftYield;
+        public final ModConfigSpec.IntValue painkillersCraftYield;
+        public final ModConfigSpec.IntValue morphineCraftYield;
+        public final ModConfigSpec.IntValue morphineInjectorCraftUses;
+        public final ModConfigSpec.IntValue adrenalineInjectorCraftUses;
+        public final ModConfigSpec.IntValue defibrillatorCraftUses;
+        public final ModConfigSpec.EnumValue<LastAid.InjuryDebuffMode> injuryDebuffMode;
+        public final ModConfigSpec.DoubleValue lowInjuryDebuffDamageScale;
+        public final ModConfigSpec.DoubleValue lowInjuryDebuffAmplifierScale;
+        public final ModConfigSpec.DoubleValue lowInjuryDebuffDurationScale;
+        public final ModConfigSpec.ConfigValue<List<? extends String>> injuryDebuffOverrides;
+        public final ModConfigSpec.ConfigValue<List<? extends String>> suppressionEntityBlacklist;
+        public final ModConfigSpec.BooleanValue commandTipsEnabled;
+
+
+        private static ModConfigSpec.IntValue healthEntry(ModConfigSpec.Builder builder, String name, int defaultVal) {
+            String noSpaceName = name.replace(' ', '_');
+            return builder.comment("Max health of the " + name).translation("lastaid.config.maxhealth." + noSpaceName.toLowerCase(Locale.ENGLISH)).defineInRange("maxHealth" + noSpaceName, defaultVal, 2, Integer.MAX_VALUE);
+        }
+
+        private static ModConfigSpec.DoubleValue multiplierEntry(ModConfigSpec.Builder builder, String name, double defaultVal) {
+            return builder.comment("The multiplier for local armor for every armor of slot " + name).translation("lastaid.config.multiplier." + name.toLowerCase(Locale.ROOT)).defineInRange("multiplier" + name, defaultVal, 0D, 16D);
+        }
+
+        private static ModConfigSpec.DoubleValue offsetEntry(ModConfigSpec.Builder builder, String name, double defaultVal) {
+            return builder.comment("The static offset applied to any armor piece with a value greater than zero of slot " + name).translation("lastaid.config.offset." + name.toLowerCase(Locale.ROOT)).defineInRange("offset" + name, defaultVal, 0D, 4D);
+        }
+
+        public static class IEEntry {
+
+            public final ModConfigSpec.IntValue totalHeals;
+            public final ModConfigSpec.IntValue secondsPerHeal;
+            public final ModConfigSpec.IntValue applyTime;
+
+            IEEntry(ModConfigSpec.Builder builder, String name, int initialTotalHeals, int initialSecondsPerHeal, int initialApplyTime) {
+                builder.push(name);
+                totalHeals = builder
+                        .comment("The total heals this item does when applied. 1 heal = half a heart")
+                        .translation("lastaid.config.totalheals")
+                        .defineInRange("totalsHeals", initialTotalHeals, 1, Byte.MAX_VALUE);
+                secondsPerHeal = builder
+                        .comment("The time it takes for a single heal to trigger. Total time this item is active = this * totalHeals")
+                        .translation("lastaid.config.secondsperheal")
+                        .defineInRange("secondsPerHeal", initialSecondsPerHeal, 1, Short.MAX_VALUE);
+                applyTime = builder
+                        .comment("The time it takes in the GUI to apply the item in milliseconds")
+                        .translation("lastaid.config.applytime")
+                        .defineInRange("applyTime", initialApplyTime, 0, 16000);
+                builder.pop();
+            }
+        }
+    }
+
+    public static class General {
+
+        public General(ModConfigSpec.Builder builder) {
+            builder.comment("Generic configuration settings");
+            builder.push("misc");
+            debug = builder
+                    .comment("Enabled additional debug logs - May slow down the game and will increase log file size",
+                            "Only enable for special purposes")
+                    .translation("lastaid.config.debug")
+                    .define("debug", false);
+            builder.pop();
+        }
+
+        public final ModConfigSpec.BooleanValue debug;
+    }
+
+    public static class Client {
+
+        public enum OverlayMode {
+            OFF, NUMBERS, HEARTS, PLAYER_MODEL, PLAYER_MODEL_4_COLORS;
+
+            public boolean isPlayerModel() {
+                return this == PLAYER_MODEL || this == PLAYER_MODEL_4_COLORS;
+            }
+        }
+
+        public enum Position {
+            TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT
+        }
+
+        public enum TooltipMode {
+            REPLACE, APPEND, NONE
+        }
+
+        public enum VanillaHealthbarMode {
+            NORMAL, HIGHLIGHT_CRITICAL_PATH, HIDE
+        }
+
+        public final ModConfigSpec.EnumValue<VanillaHealthbarMode> vanillaHealthBarMode;
+        public final ModConfigSpec.EnumValue<OverlayMode> overlayMode;
+        public final ModConfigSpec.EnumValue<Position> pos;
+        public final ModConfigSpec.EnumValue<TooltipMode> armorTooltipMode;
+        public final ModConfigSpec.IntValue xOffset;
+        public final ModConfigSpec.IntValue yOffset;
+        public final ModConfigSpec.IntValue alpha;
+        public final ModConfigSpec.BooleanValue enableSounds;
+        public final ModConfigSpec.BooleanValue enableEasterEggs;
+        public final ModConfigSpec.IntValue visibleDurationTicks;
+        public final ModConfigSpec.BooleanValue flash;
+        public final ModConfigSpec.BooleanValue hidePlayerModelIndicators;
+
+        public Client(ModConfigSpec.Builder builder) {
+            builder.comment("Client only configuration settings").push("Overlay");
+            vanillaHealthBarMode = builder
+                    .comment("The mode how to show the mc vanilla health bar.",
+                            "NORMAL shows the vanilla health value that calculated the way vanillaHealthCalculation is specified (server config)",
+                            "HIGHLIGHT_CRITICAL_PATH show the vanilla health value and highlights the health value of the most damaged critical limb (by default head or body) using the hardcore-styled hearts for them and the normal hearts for the rest of the health. Only works if vanillaHealthCalculation is set to AVERAGE_ALL",
+                            "HIDE just doesn't display the vanilla health bar at all.")
+                    .translation("lastaid.config.vanillahealthbarmode")
+                    .defineEnum("vanillaHealthBarMode", VanillaHealthbarMode.HIDE);
+
+            overlayMode = builder
+                    .comment("The design to use to visualize the health")
+                    .defineEnum("overlayMode", OverlayMode.PLAYER_MODEL);
+
+            pos = builder
+                    .comment("The relative point of the overlay")
+                    .translation("lastaid.config.position")
+                    .defineEnum("overlayPosition", Position.TOP_LEFT);
+
+            armorTooltipMode = builder
+                    .comment("Determines how first aid should display armor on item tooltips.", "REPLACE replaces the vanilla description with the one fitting first aid\nAPPEND will add the first aid values at the bottom", "NONE will show the old vanilla values. Be advised this is purly visual, interally, the first aid value will always be used")
+                    .defineEnum("armorTooltipMode", TooltipMode.REPLACE);
+
+            xOffset = builder
+                    .comment("The offset on the x axis")
+                    .translation("lastaid.config.xoffset")
+                    .defineInRange("xOffset", 0, Short.MIN_VALUE, Short.MAX_VALUE);
+
+            yOffset = builder
+                    .comment("The offset on the y axis")
+                    .translation("lastaid.config.yoffset")
+                    .defineInRange("yOffset", 1, Short.MIN_VALUE, Short.MAX_VALUE);
+
+            alpha = builder
+                    .comment("Determines the transparency of the overlay. 200 = Maximum transparency, 0 = Fully opaque")
+                    .translation("lastaid.config.alpha")
+                    .defineInRange("alpha", 50, 0 ,200);
+
+            this.visibleDurationTicks = builder
+                    .translation("lastaid.config.visibledurationticks")
+                    .comment("Specifies how many ticks (20 ticks = 1 second) the overlay should be visible after health changed (healing/damaging)",
+                            "If set to -1, the HUD is always visible")
+                    .defineInRange("visibleDurationTicks", -1, -1, 600);
+
+            this.flash = builder
+                    .translation("lastaid.config.flash")
+                    .comment("If set to true, the overlay will flash for a short moment if the health changed. Only affects PLAYER_MODEL overlay")
+                    .define("flash", true);
+
+            this.hidePlayerModelIndicators = builder
+                    .comment("If true, hides status indicator lines under the player-model HUD. Default true.")
+                    .define("hidePlayerModelIndicators", true);
+            builder.pop();
+
+
+            builder.push("Misc");
+            enableSounds = builder
+                    .comment("Set to true to enable the debuff sounds. Only matters when debuffs are enabled")
+                    .translation("lastaid.config.enablesoundsystem")
+                    .define("enableSoundSystem", true);
+            enableEasterEggs = builder
+                    .comment("Disables the funny easter eggs on certain events if false")
+                    .define("enableEasterEggs", true);
+            builder.pop();
+        }
+    }
+
+//    @Config.Comment("If true, all usages of setHealth from other mods will be captured. Should not cause any problems, but allow mods like scaling health bandages to apply")
+//    @Config.LangKey("lastaid.config.sethealth")
+//    @ExtraConfig.Advanced
+    public static final boolean watchSetHealth = true; //If we need this at all, this is server as well
+}

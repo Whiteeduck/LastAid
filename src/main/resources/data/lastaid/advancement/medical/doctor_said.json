@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "id": "lastaid:medical_kit"
+    },
+    "title": {
+      "translate": "advancements.lastaid.medical.doctor_said.title"
+    },
+    "description": {
+      "translate": "advancements.lastaid.medical.doctor_said.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "lastaid:medical/something_wrong"
+}

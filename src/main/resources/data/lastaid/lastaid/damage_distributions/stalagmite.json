@@ -1,0 +1,13 @@
+{
+  "type": "lastaid:static",
+  "damageTypes": ["stalagmite"],
+  "algorithm": {
+    "type": "lastaid:standard",
+    "partMap": {
+      "feet": [
+        "left_foot",
+        "right_foot"
+      ]
+    }
+  }
+}

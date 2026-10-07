@@ -1,0 +1,9 @@
+{
+  "type": "lastaid:static",
+  "damageTypes": ["cramming", "in_wall"],
+  "algorithm": {
+    "type": "lastaid:random",
+    "nearestFirst": false,
+    "tryNoKill": true
+  }
+}
